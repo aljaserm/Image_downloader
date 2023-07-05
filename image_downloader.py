@@ -1,6 +1,8 @@
 import requests
 import os
 import argparse
+import hashlib
+
 
 
 def download_images(file_path, output_dir):
@@ -17,20 +19,24 @@ def download_images(file_path, output_dir):
 
 
 def download_image(image_url, output_dir):
-  try:
-    response = requests.get(image_url, stream=True)
-    if response.status_code == 200:
-      filename = image_url.split('/')[-1]
-      save_path = os.path.join(output_dir, filename)
-      with open(save_path, 'wb') as file:
-        for chunk in response.iter_content(1024):
-          file.write(chunk)
-      print('Downloaded:', image_url)
-    else:
-      print('Failed to download:', image_url)
-  except requests.exceptions.RequestException as e:
-    print('Failed to download:', image_url)
-    print(e)
+    try:
+        response = requests.get(image_url, stream=True)
+        if response.status_code == 200:
+            # Generate a unique file name using the hash of the image URL
+            image_hash = hashlib.md5(image_url.encode()).hexdigest()
+            extension = image_url.split('.')[-1]
+            filename = f"{image_hash}.{extension}"
+            
+            save_path = os.path.join(output_dir, filename)
+            with open(save_path, 'wb') as file:
+                for chunk in response.iter_content(1024):
+                    file.write(chunk)
+            print('Downloaded:', image_url)
+        else:
+            print('Failed to download:', image_url)
+    except requests.exceptions.RequestException as e:
+        print('Failed to download:', image_url)
+        print(e)
 
 
 def main():
